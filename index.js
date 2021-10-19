@@ -1,25 +1,23 @@
 const colors = require("colors/safe");
 
-let num1;
-let num2;
-let arr2 = [];
+let numMin;
+let numMax;
+let arr = [];
 let count = 1;
 
 if (!/^(0|[1-9]\d*)$/.test(Number(process.argv[2])) || !/^(0|[1-9]\d*)$/.test(Number(process.argv[3]))) {
-    console.log(colors.red('ВВеденые данные не являются числами'));
-} else {
-    isNum();
-}
+    console.log(colors.red('Одно или оба значения не являются числами или имеют отрицательный знак'));
+} else isNum();
 
 function isNum(){
-    if (Number(process.argv[2]) <= Number(process.argv[3])) {
-        num1 = Number(process.argv[2]);
-        num2 = Number(process.argv[3]);
+    if (Number(process.argv[2]) < Number(process.argv[3])) {
+        numMin = Number(process.argv[2]);
+        numMax = Number(process.argv[3]);
     } else {
-        num1 = Number(process.argv[3]);
-        num2 = Number(process.argv[2]);
+        numMin = Number(process.argv[3]);
+        numMax = Number(process.argv[2]);
     }
-    console.log('Ваши числа от ' + num1 + ' до ' + num2);
+    console.log('Ваши числа от ' + numMin + ' до ' + numMax);
 
     function isPrime(num) {
         if(num < 2) return false;
@@ -27,18 +25,18 @@ function isNum(){
             if(num % i == 0)
                 return false;
         }
-        arr2.push(num)
+        arr.push(num)
     }
     
-    for (let i = num1; i < num2; i++){
+    for (let i = numMin; i <= numMax; i++){
         if(isPrime(i)) console.log(i);
     }
 
-    if (arr2.length == 0){
+    if (arr.length == 0){
         console.log(colors.red('В заданном диапозоне нет простых чисел'));
     } else {
         console.log('Простые числа:');
-        arr2.forEach(e => {
+        arr.forEach(e => {
             switch(count){
                 case 1:
                     console.log(colors.green(e));
