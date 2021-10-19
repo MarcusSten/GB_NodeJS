@@ -4,16 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/MarcusSten/GB_NodeJS.git"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/MarcusSten/GB_NodeJS/issues"
-  },
-  "homepage": "https://github.com/MarcusSten/GB_NodeJS#readme"
+  "dependencies": {
+    "colors": "^1.4.0"
+  }
 }
