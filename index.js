@@ -1,62 +1,36 @@
-const colors = require("colors/safe");
+const fs = require ("fs");
 
-let numMin;
-let numMax;
-let arr = [];
-let count = 1;
+const readStream = fs.createReadStream("./access.log", "utf8");
+const ip_1 = /89.123.1.41/;
+const ip_2 = /34.48.240.111/;
+const file_1 = './89.123.1.41_requests.log';
+const file_2 = './34.48.240.111_requests.log';
 
-if (!/^(0|[1-9]\d*)$/.test(Number(process.argv[2])) || !/^(0|[1-9]\d*)$/.test(Number(process.argv[3]))) {
-    console.log(colors.red('Одно или оба значения не являются числами или имеют отрицательный знак'));
-} else isNum();
+const stream1 = fs.createWriteStream(file_1, {flags: "a", encoding: "utf8"});
+const stream2 = fs.createWriteStream(file_2, {flags: "a",  encoding: "utf8"});
 
-function isNum(){
-    if (Number(process.argv[2]) < Number(process.argv[3])) {
-        numMin = Number(process.argv[2]);
-        numMax = Number(process.argv[3]);
-    } else {
-        numMin = Number(process.argv[3]);
-        numMax = Number(process.argv[2]);
+let readed = 0;
+var line = 0;
+fs.stat('./access.log', (err,stats) => line = stats.size/50);
+let counter = 1;
+readStream.on("data", (chunk) => {
+  let res = chunk.toString().split("\n");
+
+  res.forEach((item) => {
+    if (ip_1.test(item)) {
+      stream1.write(item + "\n");
     }
-    console.log('Ваши числа от ' + numMin + ' до ' + numMax);
-
-    function isPrime(num) {
-        if(num < 2) return false;
-        for (var i = 2; i < num; i++) {
-            if(num % i == 0)
-                return false;
-        }
-        arr.push(num)
+    if (ip_2.test(item)) {
+     stream2.write(item + "\n");
     }
-    
-    for (let i = numMin; i <= numMax; i++){
-        if(isPrime(i)) console.log(i);
+  });
+  readed = readed + 64*1024;
+  if (readed > line*counter) {
+      counter++
+      process.stdout.write(`*`);
     }
+});
 
-    if (arr.length == 0){
-        console.log(colors.red('В заданном диапозоне нет простых чисел'));
-    } else {
-        console.log('Простые числа:');
-        arr.forEach(e => {
-            switch(count){
-                case 1:
-                    console.log(colors.green(e));
-                    count++;
-                    break;
-                case 2:
-                    console.log(colors.yellow(e));
-                    count++;
-                    break;
-                case 3:
-                    console.log(colors.red(e));
-                    count = 1;
-                    break;
-            }
-        });
-    }
-}
-
-
-
-
-
-
+readStream.on("end", () => {
+  console.log("Streamming done.");
+});
