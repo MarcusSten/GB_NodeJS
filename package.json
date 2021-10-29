@@ -7,9 +7,29 @@
     "dev": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://https://github.com/MarcusSten/GB_NodeJS.git"
+  },
+  "keywords": [
+    "node",
+    "gb",
+    "geekbrains"
+  ],
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://https://github.com/MarcusSten/GB_NodeJS/issues"
+  },
+  "devDependencies": {
+    "eslint": "^7.31.0"
+  },
   "dependencies": {
-    "colors": "^1.4.0"
+    "colors": "^1.4.0",
+    "inquirer": "^8.1.2",
+    "moment": "^2.29.1",
+    "moment-precise-range-plugin": "^1.3.0",
+    "node-fs": "^0.1.7",
+    "yargs": "^17.1.0"
   }
 }

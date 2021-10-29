@@ -1,62 +1,66 @@
-const colors = require("colors/safe");
+const fs = require ("fs/promises");
+const {lstatSync} =require ("fs");
+const path = require("path");
+const {join} = require("path");
+const inquirer = require("inquirer");
+const yargs = require("yargs");
 
-let numMin;
-let numMax;
-let arr = [];
-let count = 1;
+const options = yargs
+  .positional ("d", {
+    describe: "path to dir",
+    default: process.cwd()
+  })
+  .positional ("p", {
+    describe: "pattern",
+    default: ""
+  })
+  .argv;
 
-if (!/^(0|[1-9]\d*)$/.test(Number(process.argv[2])) || !/^(0|[1-9]\d*)$/.test(Number(process.argv[3]))) {
-    console.log(colors.red('Одно или оба значения не являются числами или имеют отрицательный знак'));
-} else isNum();
+let currentDir = options.d;
 
-function isNum(){
-    if (Number(process.argv[2]) < Number(process.argv[3])) {
-        numMin = Number(process.argv[2]);
-        numMax = Number(process.argv[3]);
-    } else {
-        numMin = Number(process.argv[3]);
-        numMax = Number(process.argv[2]);
-    }
-    console.log('Ваши числа от ' + numMin + ' до ' + numMax);
+const isFile = async (path) => (await fs.lstat(path)).isFile();
 
-    function isPrime(num) {
-        if(num < 2) return false;
-        for (var i = 2; i < num; i++) {
-            if(num % i == 0)
-                return false;
-        }
-        arr.push(num)
-    }
-    
-    for (let i = numMin; i <= numMax; i++){
-        if(isPrime(i)) console.log(i);
-    }
-
-    if (arr.length == 0){
-        console.log(colors.red('В заданном диапозоне нет простых чисел'));
-    } else {
-        console.log('Простые числа:');
-        arr.forEach(e => {
-            switch(count){
-                case 1:
-                    console.log(colors.green(e));
-                    count++;
-                    break;
-                case 2:
-                    console.log(colors.yellow(e));
-                    count++;
-                    break;
-                case 3:
-                    console.log(colors.red(e));
-                    count = 1;
-                    break;
-            }
-        });
-    }
+class ListItem {
+  constructor (path, filename) {
+     this.path = path;
+     this.filename = filename;
+  }
+  get isDir () {
+    return lstatSync(this.path).isDirectory();
+  }
 }
+const run = async () => {
+  const list = await fs.readdir(currentDir);
+  const items = list.map (filename =>  new ListItem(join(currentDir, filename), filename));
 
+const item = await  inquirer
+    .prompt([{
+            name: "fileName",
+            type: "list",
+            message: `Choose file: ${currentDir}`,
+            choices: items.map(item =>({name: item.filename, value: item})),
+        }])
+    .then(answer => answer.fileName);
 
+    if(item.isDir) {
+      currentDir = item.path;
+      return await run()
+    } else {
+      const data = await fs.readFile(item.path, "utf-8");
+      if (options.p === null) {
+        console.log(data);
+      } else {
+        const lines = data.split("\n");
+        lines.forEach(line => {
+          const regex = new RegExp(options.p);
+          if (regex.test(line)) {
+            console.log(line);
+          }
+        });
+      }
+         console.log("No matches");
+        return;
+    }
+ }
 
-
-
-
+run();
