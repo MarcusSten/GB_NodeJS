@@ -1,66 +1,35 @@
-const fs = require ("fs/promises");
-const {lstatSync} =require ("fs");
-const path = require("path");
-const {join} = require("path");
-const inquirer = require("inquirer");
-const yargs = require("yargs");
+const http = require("http");
+const { join } = require("path");
+const fs = require('fs');
 
-const options = yargs
-  .positional ("d", {
-    describe: "path to dir",
-    default: process.cwd()
-  })
-  .positional ("p", {
-    describe: "pattern",
-    default: ""
-  })
-  .argv;
+const isFile = (path) => fs.lstatSync(path).isFile();
 
-let currentDir = options.d;
+(async () => {
+    http.createServer((request, response) => {
+        const filePath = join(process.cwd(), request.url.replace(/\[\.\.]/gi, '..'));
+        if(!fs.existsSync(filePath)) {
+            return response.end("Not found");
+        }
 
-const isFile = async (path) => (await fs.lstat(path)).isFile();
+        if(isFile(filePath)) {
+            return fs.createReadStream(filePath, 'utf8').pipe(response);
+        }
 
-class ListItem {
-  constructor (path, filename) {
-     this.path = path;
-     this.filename = filename;
-  }
-  get isDir () {
-    return lstatSync(this.path).isDirectory();
-  }
-}
-const run = async () => {
-  const list = await fs.readdir(currentDir);
-  const items = list.map (filename =>  new ListItem(join(currentDir, filename), filename));
+        const links = fs.readdirSync(filePath)
+            .map(filename => [join(request.url, filename), filename])
+            .map(([filepath, filename]) => `<li><a href="${filepath}">${filename}</a></li>`)
+            .concat([
+                `<li><a href="[..]/">..</a></li>`
+            ])
+            .join("");
 
-const item = await  inquirer
-    .prompt([{
-            name: "fileName",
-            type: "list",
-            message: `Choose file: ${currentDir}`,
-            choices: items.map(item =>({name: item.filename, value: item})),
-        }])
-    .then(answer => answer.fileName);
+        const html = fs
+            .readFileSync(join(__dirname, "index.html"), "utf8")
+            .replace(/#links/gi, links);
 
-    if(item.isDir) {
-      currentDir = item.path;
-      return await run()
-    } else {
-      const data = await fs.readFile(item.path, "utf-8");
-      if (options.p === null) {
-        console.log(data);
-      } else {
-        const lines = data.split("\n");
-        lines.forEach(line => {
-          const regex = new RegExp(options.p);
-          if (regex.test(line)) {
-            console.log(line);
-          }
+        response.writeHead(200, {
+            'Content-Type': 'text/html'
         });
-      }
-         console.log("No matches");
-        return;
-    }
- }
-
-run();
+        response.end(html);
+    }).listen(3000);
+})();

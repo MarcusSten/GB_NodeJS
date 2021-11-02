@@ -9,18 +9,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://https://github.com/MarcusSten/GB_NodeJS.git"
+    "url": "git+https://github.com/MarcusSten/GB_NodeJS.git"
   },
   "keywords": [
     "node",
-    "gb",
-    "geekbrains"
+    "gb"
   ],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://https://github.com/MarcusSten/GB_NodeJS/issues"
+    "url": "https://github.com/MarcusSten/GB_NodeJS/issues"
   },
+  "homepage": "https://github.com/MarcusSten/GB_NodeJS#readme",
   "devDependencies": {
     "eslint": "^7.31.0"
   },
