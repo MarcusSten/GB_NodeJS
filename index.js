@@ -1,62 +1,74 @@
-const colors = require("colors/safe");
+const io = require('socket.io');
+const http = require('http');
+const path = require('path');
+const fs = require('fs');
 
-let numMin;
-let numMax;
-let arr = [];
-let count = 1;
+const server = http.createServer((request, response) => {
+    const indexPath = path.join(__dirname, "index.html");
+    const readStream = fs.createReadStream(indexPath);
+    readStream.pipe(response);
+});
 
-if (!/^(0|[1-9]\d*)$/.test(Number(process.argv[2])) || !/^(0|[1-9]\d*)$/.test(Number(process.argv[3]))) {
-    console.log(colors.red('Одно или оба значения не являются числами или имеют отрицательный знак'));
-} else isNum();
+const socket = io(server);
+let usersList = [];
+let delUsersList = [];
 
-function isNum(){
-    if (Number(process.argv[2]) < Number(process.argv[3])) {
-        numMin = Number(process.argv[2]);
-        numMax = Number(process.argv[3]);
-    } else {
-        numMin = Number(process.argv[3]);
-        numMax = Number(process.argv[2]);
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
     }
-    console.log('Ваши числа от ' + numMin + ' до ' + numMax);
+    return color;
+  }
+socket.on('connection', client => {
+    console.log('Client ID: ' + client.id);
+    client.broadcast.emit('NEW_CLIENT_CONNECTED');
 
-    function isPrime(num) {
-        if(num < 2) return false;
-        for (var i = 2; i < num; i++) {
-            if(num % i == 0)
-                return false;
+    client.on('NewPlayer', name => {
+        let user = {
+            name: '',
+            color: '',
+            id: ''
         }
-        arr.push(num)
-    }
-    
-    for (let i = numMin; i <= numMax; i++){
-        if(isPrime(i)) console.log(i);
-    }
-
-    if (arr.length == 0){
-        console.log(colors.red('В заданном диапозоне нет простых чисел'));
-    } else {
-        console.log('Простые числа:');
-        arr.forEach(e => {
-            switch(count){
-                case 1:
-                    console.log(colors.green(e));
-                    count++;
-                    break;
-                case 2:
-                    console.log(colors.yellow(e));
-                    count++;
-                    break;
-                case 3:
-                    console.log(colors.red(e));
-                    count = 1;
-                    break;
+        let index = delUsersList.findIndex(function(user, index ) {
+            if (user.name === name) {
+                return true;
+            };
+        })
+        if (index >-1) {
+            oldUser = delUsersList.splice(index,1);
+            usersList.push(oldUser[0]);
+            console.log("Welcome back " +  oldUser[0].name);
+        } else {
+            user.name = name;
+            user.color = getRandomColor();
+            user.id = client.id;
+            usersList.push(user);
+            console.log('New client connected ' + name);
+        }
+    console.log(usersList);
+    })
+    client.on('disconnect', name => {
+        let index = usersList.findIndex(function(user, index){
+            if (user.id === client.id) {
+                return true;
             }
         });
-    }
-}
+        delUser = usersList.splice(index, 1);
+        delUsersList.push(delUser[0])
+        console.log('Client  disconnected: ' + delUser[0].name);
+        console.log(usersList);
+
+    })
+    client.on('CLIENT_MSG', data => {
+        const payload = {
+            message: data.message.split('').reverse().join('')
+        };
+        client.emit('SERVER_MSG', payload)
+        client.broadcast.emit('SERVER_MSG', payload);
+    });
+});
 
 
-
-
-
-
+server.listen(3000);
